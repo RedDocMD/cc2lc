@@ -106,7 +106,7 @@ def export_month(month: Month,
     games = games_response.json()['games']
     for game in games:
         uuid = game['uuid']
-        if is_game_exported(uuid):
+        if is_game_exported(conn, uuid):
             print(f'Already imported {uuid}, skipping')
         pgn = game['pgn']
         cc_url = game['url']
