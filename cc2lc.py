@@ -86,10 +86,10 @@ def export_to_lc(pgn: str) -> str:
 
 
 def export_month(month: Month,
+                 url: str,
                  conn: sqlite3.Connection,
                  cc_games_url: str,
                  cc_headers) -> None:
-    url = f'{cc_games_url}/{month.year}/{month.month}'
     games_response = requests.get(url, headers=cc_headers)
     games_response.raise_for_status()
     games = games_response.json()['games']
@@ -153,7 +153,7 @@ existing_months = list(
 for url, month in zip(archives, months):
     if month in existing_months:
         continue
-    export_month(month, conn, cc_games_url, cc_headers)
-export_month(most_recent_month)
+    export_month(month, url, conn, cc_games_url, cc_headers)
+export_month(most_recent_month, url, conn, cc_games_url, cc_headers)
 
 conn.close()
