@@ -82,7 +82,7 @@ def export_to_lc(pgn: str) -> str:
     }
     data = {'pgn': pgn}
     import_response = requests.post(lc_import_url, headers=lc_headers, data=data)
-    if import_response.status_code == 429:
+    while import_response.status_code == 429:
         print('Rate limited! Waiting for a minute ...')
         time.sleep(61)
         print('... resuming')
