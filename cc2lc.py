@@ -88,7 +88,7 @@ def export_to_lc(pgn: str) -> str:
 def export_month(month: Month,
                  conn: sqlite3.Connection,
                  cc_games_url: str,
-                 cc_headers: map[str, str]) -> None:
+                 cc_headers) -> None:
     url = f'{cc_games_url}/{month.year}/{month.month}'
     games_response = requests.get(url, headers=cc_headers)
     games_response.raise_for_status()
