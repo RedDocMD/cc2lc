@@ -166,7 +166,7 @@ existing_months = list(
 for url, month in zip(archives, months):
     if month in existing_months:
         continue
-    export_month(month, url, conn, cc_games_url, cc_headers)
-export_month(most_recent_month, url, conn, cc_games_url, cc_headers)
+    export_month(month, url, conn, cc_headers)
+export_month(most_recent_month, url, conn, cc_headers)
 
 conn.close()
