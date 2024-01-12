@@ -108,6 +108,7 @@ def export_month(month: Month,
         uuid = game['uuid']
         if is_game_exported(conn, uuid):
             print(f'Already imported {uuid}, skipping')
+            continue
         pgn = game['pgn']
         cc_url = game['url']
         time_control = game['time_control']
