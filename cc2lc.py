@@ -158,7 +158,7 @@ most_recent_month = months[most_recent_month(months)]
 
 existing_months = list(
     map(
-        lambda r: Month(r['month'], r['year']),
+        lambda r: Month(r[0], r[1]),
         conn.execute('SELECT month, year FROM months').fetchall()
     )
 )
