@@ -1,6 +1,7 @@
 import requests
 import sqlite3
 import os
+import time
 
 
 class Month:
@@ -81,6 +82,11 @@ def export_to_lc(pgn: str) -> str:
     }
     data = {'pgn': pgn}
     import_response = requests.post(lc_import_url, headers=lc_headers, data=data)
+    if import_response.status_code == 429:
+        print('Rate limited! Waiting for a minute ...')
+        time.sleep(61)
+        print('... resuming')
+        import_response = requests.post(lc_import_url, headers=lc_headers, data=data)
     import_response.raise_for_status()
     import_json = import_response.json()
     return import_json['url']
