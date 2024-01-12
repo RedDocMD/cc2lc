@@ -104,6 +104,7 @@ def export_month(month: Month,
     games_response = requests.get(url, headers=cc_headers)
     games_response.raise_for_status()
     games = games_response.json()['games']
+    print(f'Exporting {month.month}/{month.year} ...')
     for game in games:
         uuid = game['uuid']
         if is_game_exported(conn, uuid):
@@ -135,7 +136,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         conn.commit()
     conn.execute('INSERT INTO months(month, year) VALUES(?, ?)', (month.month, month.year))
     conn.commit()
-    print(f'Exported {month.month}/{month.year}')
+    print(f'... exported {month.month}/{month.year}')
 
 
 conn = get_db()
