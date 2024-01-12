@@ -92,16 +92,22 @@ def export_to_lc(pgn: str) -> str:
     return import_json['url']
 
 
+def is_game_exported(conn: sqlite3.Connection, uuid: str) -> bool:
+    data = conn.execute('SELECT * from games WHERE uuid = ?', (uuid,)).fetchall()
+    return len(data) > 0
+
+
 def export_month(month: Month,
                  url: str,
                  conn: sqlite3.Connection,
-                 cc_games_url: str,
                  cc_headers) -> None:
     games_response = requests.get(url, headers=cc_headers)
     games_response.raise_for_status()
     games = games_response.json()['games']
     for game in games:
         uuid = game['uuid']
+        if is_game_exported(uuid):
+            print(f'Already imported {uuid}, skipping')
         pgn = game['pgn']
         cc_url = game['url']
         time_control = game['time_control']
