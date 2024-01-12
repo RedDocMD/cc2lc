@@ -79,7 +79,8 @@ def export_to_lc(pgn: str) -> str:
         'User-Agent': 'cc2lc',
         'Authorization': f'Bearer {token}'
     }
-    import_response = requests.post(lc_import_url, headers=lc_headers, data=pgn)
+    data = {'pgn': pgn}
+    import_response = requests.post(lc_import_url, headers=lc_headers, data=data)
     import_response.raise_for_status()
     import_json = import_response.json()
     return import_json['url']
