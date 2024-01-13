@@ -47,6 +47,15 @@ CREATE TABLE IF NOT EXISTS games(
     result TEXT NOT NULL
 );
 """)
+    conn.execute("""
+CREATE TABLE IF NOT EXISTS month_games(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    month_id INTEGER NOT NULL,
+    game_id INTEGER NOT NULL,
+    FOREIGN KEY (month_id) REFERENCES months(id),
+    FOREIGN KEY (game_id) REFERENCES games(id)
+);
+""")
     conn.commit()
 
 
@@ -97,6 +106,17 @@ def is_game_exported(conn: sqlite3.Connection, uuid: str) -> bool:
     return len(data) > 0
 
 
+def is_month_inserted(conn: sqlite3.Connection, month: Month) -> bool:
+    data = conn.execute('SELECT * from months WHERE month = ? AND year = ?',
+                        (month.month, month.year)).fetchall()
+    return len(data) > 0
+
+
+def is_game_associated(conn: sqlite3.Connection, game_id: int) -> bool:
+    data = conn.execute('SELECT * from month_games WHERE game_id = ?', (game_id,)).fetchall()
+    return len(data) > 0
+
+
 def export_month(month: Month,
                  url: str,
                  conn: sqlite3.Connection,
@@ -105,8 +125,10 @@ def export_month(month: Month,
     games_response.raise_for_status()
     games = games_response.json()['games']
     print(f'Exporting {month.month}/{month.year} ...')
+    uuids = []
     for game in games:
         uuid = game['uuid']
+        uuids.append(uuid)
         if is_game_exported(conn, uuid):
             print(f'Already imported {uuid}, skipping')
             continue
@@ -134,8 +156,17 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         (uuid, pgn, lc_url, cc_url, time_control, white, white_url, white_rating, black, black_url, black_rating, result)
         )
         conn.commit()
-    conn.execute('INSERT INTO months(month, year) VALUES(?, ?)', (month.month, month.year))
-    conn.commit()
+    if not is_month_inserted(conn, month):
+        conn.execute('INSERT INTO months(month, year) VALUES (?, ?)', (month.month, month.year))
+        conn.commit()
+    month_id = conn.execute('SELECT id FROM months WHERE month = ? AND year = ?',
+                            (month.month, month.year)).fetchone()[0]
+    for uuid in uuids:
+        game_id = conn.execute('SELECT id FROM games WHERE uuid = ?', (uuid,)).fetchone()[0]
+        if not is_game_associated(conn, game_id):
+            conn.execute('INSERT INTO month_games(game_id, month_id) VALUES (?, ?)',
+                         (game_id, month_id))
+            conn.commit()
     print(f'... exported {month.month}/{month.year}')
 
 
@@ -156,19 +187,8 @@ archive_response = requests.get(cc_archives_url, headers=cc_headers)
 archive_response.raise_for_status()
 archives = archive_response.json()['archives']
 months = list(map(lambda a: archive_url_extract_month(a), archives))
-most_recent_month = months[most_recent_month(months)]
-
-existing_months = list(
-    map(
-        lambda r: Month(r[0], r[1]),
-        conn.execute('SELECT month, year FROM months').fetchall()
-    )
-)
 
 for url, month in zip(archives, months):
-    if month in existing_months:
-        continue
     export_month(month, url, conn, cc_headers)
-export_month(most_recent_month, url, conn, cc_headers)
 
 conn.close()
